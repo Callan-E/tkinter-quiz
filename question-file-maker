@@ -1,0 +1,37 @@
+#line0: topic of quiz
+#line1: question1
+#line2: possible answer a
+#line3: possible answer b
+#line4: possible answer c
+#line5: possible answer d
+#line6: letter of correct answer (a,b,c,d)
+#line7: question2
+#endline: "end"
+import os
+import glob
+
+def fileexists(linespos,start):
+    counter = start
+    def get_input(linespos,counter): 
+        return input(f"Input {linespos[counter]}: ")
+    line = get_input(linespos,counter)
+    while line:
+        counter += 1
+        myfile.write(line+"\n")
+        line = get_input(linespos,counter)
+        if counter == 6:
+            counter = 0 
+os.chdir(r'C:\Users\calla\Python\zz')
+files = glob.glob('*.txt')
+files.remove("score.txt")
+print(files)
+file = input("File name (no .txt): ") + ".txt"
+global myfile
+if file not in files:
+    myfile = open(file,"w")
+    fileexists(["topic", "question", "possible answer A", "possible answer B", "possible answer C", "possible answer D", "correct answer"],0)
+    myfile.close()
+else: 
+    myfile = open(file,"a")
+    fileexists(["","question", "possible answer A", "possible answer B", "possible answer C", "possible answer D", "correct answer"],1)
+    myfile.close()
