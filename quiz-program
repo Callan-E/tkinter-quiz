@@ -1,0 +1,454 @@
+from tkinter import *
+from tkinter import ttk
+import glob
+import os
+import random
+
+
+#To work without directory:
+os.chdir(r'C:\Users\calla\Python\zz') #Remove this line
+files = glob.glob('*.txt') #Replace this line with files = ["geography.txt"]
+files.remove("score.txt") #Remove this line
+
+
+
+modes = ["Endless","Millionaire"]
+global wrong
+wrong = False
+
+def setstatlists():
+    global categories
+    global questionsincat
+    global highscores
+    global attempts
+    global averages
+    global totalquestionsanswered
+    global totalpercent
+    global millionairescore
+    categories = []
+    questionsincat = []
+    highscores = []
+    attempts = []
+    averages = []
+    totalquestionsanswered = []
+    totalpercent = []
+    millionairescore = []
+
+def blankoptions():
+    optionalabel["text"] = ""
+    optionblabel["text"] = ""
+    optionclabel["text"] = ""
+    optiondlabel["text"] = ""
+
+def removecommands():
+    optionalabel["command"] = nextquestion
+    optionblabel["command"] = nextquestion
+    optionclabel["command"] = nextquestion
+    optiondlabel["command"] = nextquestion
+
+def deactivateeverything():
+    optionalabel["command"] = deactivated
+    optionblabel["command"] = deactivated
+    optionclabel["command"] = deactivated
+    optiondlabel["command"] = deactivated
+    nextbutton["command"] = deactivated
+
+def addcommands():
+    optionalabel["command"] = optionaselected
+    optionblabel["command"] = optionbselected
+    optionclabel["command"] = optioncselected
+    optiondlabel["command"] = optiondselected
+
+def evaluate(option):
+    global correctanswer
+    global optionsletters
+    global score
+    global questionlabel
+    global questioncount
+    global wrong
+    global lives
+    global fiftycount
+    global streakcounter
+    if questionlabel["text"] != "Are you ready?":
+        questioncount += 1
+    nextbutton["command"] = nextquestion
+    if optionsletters[option] == correctanswer.lower():
+        correctlabel["text"] = "Correct"
+        if questionlabel["text"] != "Are you ready?":
+            score += 10
+            streakcounter += 1
+            if streakcounter % 5 == 0 and modeselected.get() == "Millionaire":
+                liveslostlabel["text"] = f"{streakcounter} STREAK, +1 50/50"
+                match fiftycount:
+                    case 0:
+                        fiftylabel0["text"] = "50/50"
+                        fiftylabel0["command"] = fifty0
+                    case 1:
+                        fiftylabel1["text"] = "50/50"
+                        fiftylabel1["command"] = fifty1
+                    case 2:
+                        fiftylabel2["text"] = "50/50"
+                        fiftylabel2["command"] = fifty2
+                    case 3:
+                        fiftylabel3["text"] = "50/50"
+                        fiftylabel3["command"] = fifty3
+                    case 4:
+                        fiftylabel4["text"] = "50/50"
+                        fiftylabel4["command"] = fifty4
+                if fiftycount < 4:
+                    fiftycount += 1
+    if optionsletters[option] != correctanswer:
+        if questionlabel["text"] == "Are you ready?":
+            correctlabel["text"] = "Incorrect, correct answer was: Yes"
+        else:
+            wrong = True
+            streakcounter = 0
+            if correctanswer.lower() == "a":
+                correctlabel["text"] = f"Incorrect, correct answer was: {lines[questionnumber + 1]}"
+            if correctanswer.lower() == "b":
+                correctlabel["text"] = f"Incorrect, correct answer was: {lines[questionnumber + 2]}"
+            if correctanswer.lower() == "c":
+                correctlabel["text"] = f"Incorrect, correct answer was: {lines[questionnumber + 3]}"
+            if correctanswer.lower() == "d":
+                correctlabel["text"] = f"Incorrect, correct answer was: {lines[questionnumber + 4]}"
+    if modeselected.get() == "Millionaire" and wrong == True:
+        lives += -1
+        liveslostlabel["text"] = "Life lost"
+        liveslabel["text"] = f"Lives: {lives}"
+        
+def optionaselected():
+    removecommands()
+    evaluate(0)
+
+def optionbselected():
+    removecommands()
+    evaluate(1)
+
+def optioncselected():
+    removecommands()
+    evaluate(2)
+
+def optiondselected():
+    removecommands()
+    evaluate(3)
+
+def selectfile():
+    global myfile
+    global lines
+    global questionlabel
+    global optionalabel
+    global optionblabel
+    global optionclabel
+    global optiondlabel
+    global correctlabel
+    global questionlist
+    global optionsletters
+    global correctanswer
+    global nextbutton
+    global topic
+    global score
+    global stopbutton
+    global numberofquestions
+    global questionwindow
+    global lives
+    global liveslostlabel
+    global liveslabel
+    global fiftylabel0
+    global fiftylabel1
+    global fiftylabel2
+    global fiftylabel3
+    global fiftylabel4
+    global streakcounter
+    streakcounter = 0
+    newhighscore["text"] = ""
+    score = 0
+    if file.get() not in files or modeselected.get() not in modes:
+        fileerrorwindow = Toplevel(master)
+        fileerrorwindow.title("Error")
+        ttk.Label(fileerrorwindow,text="Error: must have a mode and category selected").grid(row=0,column=0)
+    else:
+        questionwindow = Toplevel(master)
+        questionwindow.title("Questions")
+        correctanswer = "a"
+        statbutton["command"] = statsbuttonerror
+        questionlist = []
+        myfile = open(str(file.get()),"r")
+        lines = myfile.read().splitlines()
+        for line in range(int((len(lines)-2)/6)):
+            questionlist.append(((line+1)*6)-5)
+        numberofquestions = len(questionlist)
+        readstatsfile()
+        for category in range(len(categories)):
+            if categories[category] == file.get():
+                if modeselected.get() == "Endless":
+                    ttk.Label(questionwindow,text=f"High score: {highscores[category]}").grid(row=2,column=4)
+                if modeselected.get() == "Millionaire":
+                    ttk.Label(questionwindow,text=f"High score: {millionairescore[category]}").grid(row=2,column=4)
+        optionsletters = ["a","b","c","d"]
+        categorybutton["command"] = deactivated
+        topic = ttk.Label(questionwindow,text = f"Welcome to the {lines[0]} quiz")
+        topic.grid(row=2,column=1)
+        questionlabel = ttk.Label(questionwindow,text="Are you ready?")
+        questionlabel.grid(row=3,column=1)
+        optionalabel = ttk.Button(questionwindow,text="Yes",command = optionaselected)
+        optionalabel.grid(row=4,column=0)
+        optionblabel = ttk.Button(questionwindow,text="No",command = optionbselected)
+        optionblabel.grid(row=4,column=2)
+        optionclabel = ttk.Button(questionwindow,text="Maybe",command = optioncselected)
+        optionclabel.grid(row=5,column=0)
+        optiondlabel = ttk.Button(questionwindow,text="Don't think so",command = optiondselected)
+        optiondlabel.grid(row=5,column=2)
+        correctlabel = ttk.Label(questionwindow,text = "")
+        correctlabel.grid(row=6,column=1)
+        nextbutton = ttk.Button(questionwindow,text="Next question",command = deactivated)
+        nextbutton.grid(row=3,column=3)
+        stopbutton = ttk.Button(questionwindow,text="End Session",command = finished)
+        stopbutton.grid(row=7,column=3)
+        liveslabel = ttk.Label(questionwindow,text="")
+        liveslabel.grid(row=4,column=4)
+        liveslostlabel = ttk.Label(questionwindow,text="")
+        liveslostlabel.grid(row=3,column=4)
+        if modeselected.get() == "Millionaire":
+            fiftylabel0 = ttk.Button(questionwindow,text="50/50",command=deactivated)
+            fiftylabel0.grid(row=3,column=7)
+            fiftylabel1 = ttk.Button(questionwindow,text="",command=deactivated)
+            fiftylabel1.grid(row=4,column=7)
+            fiftylabel2 = ttk.Button(questionwindow,text="",command=deactivated)
+            fiftylabel2.grid(row=5,column=7)
+            fiftylabel3 = ttk.Button(questionwindow,text="",command=deactivated)
+            fiftylabel3.grid(row=6,column=7)
+            fiftylabel4 = ttk.Button(questionwindow,text="",command=deactivated)
+            fiftylabel4.grid(row=7,column=7)
+            lives = 3
+            liveslabel["text"] = f"Lives: {lives}" 
+            fiftylabel0["text"] = "50/50"
+            fiftylabel0["command"] = fifty0
+
+def fifty0():
+    fiftylabel0["text"] = ""
+    fiftylabel0["command"] = ""
+    fifty()
+
+def fifty1():
+    fiftylabel1["text"] = ""
+    fiftylabel1["command"] = ""
+    fifty()
+
+def fifty2():
+    fiftylabel2["text"] = ""
+    fiftylabel2["command"] = ""
+    fifty()
+
+def fifty3():
+    fiftylabel3["text"] = ""
+    fiftylabel3["command"] = ""
+    fifty()
+
+def fifty4():
+    fiftylabel4["text"] = ""
+    fiftylabel4["command"] = ""
+    fifty()
+
+def readstatsfile():
+    statsfile = open("score.txt","r")
+    statslines = statsfile.read().splitlines()
+    statcounter = 0
+    for line in range(int(len(statslines))):
+        statcounter += 1
+        if statcounter == 1:
+            categories.append(statslines[line])
+        elif statcounter == 2:
+            questionsincat.append(statslines[line])
+        elif statcounter == 3:
+            highscores.append(statslines[line])
+        elif statcounter == 4:
+            attempts.append(statslines[line])
+        elif statcounter == 5:
+            averages.append(statslines[line])
+        elif statcounter == 6:
+            totalquestionsanswered.append(statslines[line])
+        elif statcounter == 7:
+            totalpercent.append(statslines[line])
+        elif statcounter == 8:
+            millionairescore.append(statslines[line])
+            statcounter = 0
+    statsfile.close()
+
+def nextquestion():
+    addcommands()
+    global questionnumber
+    global lives
+    global wrong
+    global correctanswer
+    topic["text"] = f"Score: {score}"
+    liveslostlabel["text"] = ""
+    if modeselected.get() == "Millionaire" and wrong == True:
+        if lives == 0:
+            finished()
+        wrong = False
+    if len(questionlist) <= 0:
+        outofquestions()
+    nextbutton["command"] = deactivated
+    numbers = [1,2,3,4]
+    letters = ["a","b","c","d"]
+    random.shuffle(numbers)
+    for x in range(4):
+        optionsletters[x] = letters[numbers[x]-1]
+    questionnumber = random.choice(questionlist)
+    correctanswer = lines[questionnumber+5]
+    questionlabel["text"] = lines[questionnumber]
+    optionalabel["text"] = lines[questionnumber+numbers[0]]
+    optionblabel["text"] = lines[questionnumber+numbers[1]]
+    optionclabel["text"] = lines[questionnumber+numbers[2]]
+    optiondlabel["text"] = lines[questionnumber+numbers[3]]
+    questionlist.remove(questionnumber)
+    correctlabel["text"] = ""  
+
+def outofquestions():
+    blankoptions()
+    deactivateeverything()
+    topic["text"] = ""
+    correctlabel["text"] = ""
+    questionlabel["text"] = "Out of questions, when you are ready, please press End Session"
+
+def finished():
+    questionwindow.destroy()
+    global questioncount
+    statbutton["command"] = openstatwindow
+    categorybutton["command"] = selectfile
+    stats = open("score.txt","w")
+    for x in range(len(categories)):
+        if categories[x] != file.get() or questioncount == 0:
+           stats.writelines(f"{categories[x]}\n{questionsincat[x]}\n{highscores[x]}\n{attempts[x]}\n{averages[x]}\n{totalquestionsanswered[x]}\n{totalpercent[x]}\n{millionairescore[x]}\n")
+        elif categories[x] == file.get():
+            stats.writelines(f"{categories[x]}\n")
+            stats.writelines(f"{numberofquestions}\n")
+            if modeselected.get() == "Endless":
+                if score > int(highscores[x]):
+                    stats.writelines(f"{score}\n")
+                    newhighscore["text"] = "New high score!"
+                else:
+                    stats.writelines(f"{highscores[x]}\n")
+            else:
+                stats.writelines(f"{highscores[x]}\n")
+            stats.writelines(f"{int(attempts[x])+1}\n")
+            stats.writelines(f"{int(((int(averages[x])*int(attempts[x])) + score) / (int(attempts[x]) + 1))}\n")
+            stats.writelines(f"{int(totalquestionsanswered[x]) + questioncount}\n")
+            stats.writelines(f"{str(int((int((int(totalpercent[x])/100)*int(totalquestionsanswered[x]) + int(score/10)) / (int(totalquestionsanswered[x]) + questioncount)) * 100))}\n")
+            if modeselected.get() == "Millionaire":
+                if score > int(millionairescore[x]):
+                    stats.writelines(f"{score}\n")
+                    newhighscore["text"] = "New high score!"
+                else:
+                    stats.writelines(f"{millionairescore[x]}\n")
+            else:
+                stats.writelines(f"{millionairescore[x]}\n")
+    if file.get() not in categories:
+        if modeselected.get() == "Endless":
+            stats.writelines(f"{file.get()}\n{numberofquestions}\n{score}\n1\n{score}\n{questioncount}\n{str(int((int(score/10)/questioncount) * 100))}\n0\n")
+        else:
+            stats.writelines(f"{file.get()}\n{numberofquestions}\n0\n1\n{score}\n{questioncount}\n{str(int((int(score/10)/questioncount) * 100))}\n{score}\n")
+    stats.close()
+    questioncount = 0
+    setstatlists()
+
+def deactivated():
+    pass
+
+def openstatwindow():
+    global categories
+    global questionsincat
+    global highscores
+    global attempts
+    global averages
+    global totalquestionsanswered
+    global totalpercent
+    readstatsfile()
+    statwindow = Toplevel(master)
+    statwindow.title("Stats")
+    statlabel = ttk.Label(statwindow,text="Stats")
+    statlabel.grid(row=0,column=1)
+    statcategoriesstr = ["   Categories   ","   Questions in Category   ","   Highscore   ","   Attempts   ","   Average Score   ","   Total Questions Answered   ","   Total Percent   ","   Millionaire High Score   "]
+    statcategoriesvar = [categories,questionsincat,highscores,attempts,averages,totalquestionsanswered,totalpercent,millionairescore]
+    for i in range(len(statcategoriesstr)):
+        ttk.Label(statwindow,text=statcategoriesstr[i]).grid(row=1,column=(i))
+    for x in range(len(categories)):
+        for y in range(len(statcategoriesvar)):
+            ttk.Label(statwindow,text=statcategoriesvar[y][x]).grid(row=(x+2),column=(y))
+        ttk.Label(statwindow,text=categories[x]).grid(row=(x+2),column=(0))
+    setstatlists()
+
+def statsbuttonerror():
+    global statserrorwindow
+    statserrorwindow = Toplevel(master)
+    statserrorwindow.title("Error")
+    ttk.Label(statserrorwindow,text="Error: This can only be accessed at the very start, or at the end of a round. Press End session if you wish to proceed").grid(row=0,column=0)
+    ttk.Button(statserrorwindow,text="End Session",command = endbuttonstats).grid(row=1,column=0)
+
+def endbuttonstats():
+    finished()
+    openstatwindow()
+    statserrorwindow.destroy()
+
+def fifty():
+    global fiftycount
+    optionlabels = [optionalabel,optionblabel,optionclabel,optiondlabel]
+    for x in range(4):
+        if optionsletters[x] == correctanswer:
+            optionlabels.remove(optionlabels[x])
+    random.shuffle(optionlabels)
+    optionlabels[0]["command"] = deactivated
+    optionlabels[1]["command"] = deactivated
+    optionlabels[0]["text"] = ""
+    optionlabels[1]["text"] = ""
+    fiftycount += -1
+
+global questioncount
+questioncount = 0
+
+global score
+score = 0
+
+global fiftycount
+fiftycount = 1
+
+global lives
+lives = 3
+
+setstatlists()
+
+master = Tk()
+master.title("Start Menu")
+
+frm = ttk.Frame(master,padding=100)
+frm.grid()
+
+newhighscore = ttk.Label(frm,text="")
+newhighscore.grid(row=2,column=3)
+
+file = StringVar()
+categorybox = ttk.Combobox(frm,textvariable=file)
+categorybox.grid(row=2,column=0)
+categorybox["values"] = files
+categorybox["state"] = "readonly"
+
+modeselected = StringVar()
+modebox = ttk.Combobox(frm,textvariable=modeselected)
+modebox.grid(row=5,column=0)
+modebox["values"] = modes
+modebox["state"] = "readonly"
+
+ttk.Label(frm,text="").grid(row=3,column=1)
+ttk.Label(frm,text="WELCOME").grid(row=0,column=1)
+ttk.Label(frm,text="Mode Selector").grid(row=4,column=0)
+
+categorybutton = ttk.Button(frm,text="Start", command = selectfile)
+categorybutton.grid(row=2,column=2)
+
+statbutton = ttk.Button(frm,text="View Stats",command=openstatwindow)
+statbutton.grid(row=4,column=2)
+
+categorylabel = ttk.Label(frm,text="Category selector")
+categorylabel.grid(row=1,column=0)
+
+mainloop()
